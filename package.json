@@ -1,0 +1,23 @@
+{
+  "name": "web73-ss",
+  "version": "1.0.0",
+  "description": "WEB73 Lesson",
+  "main": "./src/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start" : "nodemon ./src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThinhNgo767/Web73_Lesson.git"
+  },
+  "author": "ThinhnGo767",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ThinhNgo767/Web73_Lesson/issues"
+  },
+  "homepage": "https://github.com/ThinhNgo767/Web73_Lesson#readme",
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
