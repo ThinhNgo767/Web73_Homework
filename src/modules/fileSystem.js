@@ -1,10 +1,11 @@
+
 const fs = require("fs");
 
 const createFile = (name, content) => {
 
   fs.writeFile(name, content, (err) => {
     if (err) {
-      console.error(err);
+      console.error("error!");
     }
   });
 console.log(`success created ${name} file`)
