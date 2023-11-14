@@ -4,7 +4,7 @@ const express = require('express')
 const app = express()
 
 let fileName = "text.txt"
-let fileContent = "Hello MindX!!"
+let fileContent = "Hello MindX!"
 
 createFile(fileName,fileContent)
 

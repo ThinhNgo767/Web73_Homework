@@ -5,7 +5,7 @@ const createFile = (name, content) => {
 
   fs.writeFile(name, content, (err) => {
     if (err) {
-      console.error("error!");
+      console.error("error! create file fail");
     }
   });
 console.log(`success created ${name} file`)
