@@ -33,8 +33,7 @@ teachersRouter.use("/teachers/:id",logRequestMethod)
 
 // get all teachers
 teachersRouter.get("/teachers", (req, res) => {
-  const { key, from, to } = req.query;
-  if (!key) return;
+  const { from, to } = req.query;
   if (from && to) {
     const teacherQuery = teachers.filter((t) => t.age >= from && t.age <= to);
     return res.json({ data: teacherQuery });
