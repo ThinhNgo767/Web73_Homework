@@ -1,5 +1,6 @@
 const { createFile, readFile } = require("./modules/fileSystem");
 const {teachersRouter } = require("../router/teachers")
+const logRequestTime =require("../middleware/logRequestTime")
 
 const express = require("express");
 
@@ -7,6 +8,7 @@ const app = express();
 const PORT = 3001
 
 app.use(express.json());
+app.use(logRequestTime)
 
 // let fileName = "text.txt";
 // let fileContent = "Hello MindX!";
@@ -23,5 +25,5 @@ app.get("/", (req, res) => {
 app.use("/api/v1",teachersRouter)
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on https://localhost:${PORT}`);
+  console.log(`Example app listening on http://localhost:${PORT}`);
 });

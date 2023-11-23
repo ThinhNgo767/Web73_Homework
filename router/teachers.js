@@ -1,35 +1,13 @@
 const express = require("express");
 
 const { teachers } = require("../mock/teachers");
-const { formatDate } = require("../utils/formatDate");
+const logRequestMethod = require("../middleware/logRequestMethod");
+const requireAPIKey = require("../middleware/requireAPIKey");
 
 const teachersRouter = express.Router();
 
-const logRequestTime = (req, res, next) => {
-  console.log(`New req at : ${formatDate()}`);
-  next();
-};
-
-const requireAPIKey = (req, res, next) => {
-  const apiKey = "MindX-Teachers"
-  const { key } = req.query;
-
-  if (key === apiKey && key) {
-    next();
-  } else {
-    res.json({
-      message: "API key is not existence!",
-    });
-  }
-};
-
-const logRequestMethod = (req,res,next)=>{
-  console.log(`Method: ${req.method}`)
-  next()
-}
-
-teachersRouter.use(logRequestTime, requireAPIKey);
-teachersRouter.use("/teachers/:id",logRequestMethod)
+teachersRouter.use(requireAPIKey);
+teachersRouter.use("/teachers/:id", logRequestMethod);
 
 // get all teachers
 teachersRouter.get("/teachers", (req, res) => {
@@ -76,7 +54,8 @@ teachersRouter.put("/teachers/:id", (req, res) => {
 
   if (teacherIndex === -1) {
     return res.json({
-      message: "Resource is not exist",
+      message: "Resource is not existence",
+      data: null,
     });
   }
 
@@ -89,6 +68,7 @@ teachersRouter.put("/teachers/:id", (req, res) => {
 
   return res.json({
     message: "Update successfully",
+    data: updatedTeacher,
   });
 });
 

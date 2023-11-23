@@ -18,4 +18,4 @@ const formatDate = () => {
   return formatDate;
 };
 
-module.exports = { formatDate };
+module.exports = formatDate
