@@ -1,30 +1,30 @@
 const express = require("express");
 
-const { teachers } = require("../mock/teachers");
+const TEACHERS = require("../mock/teachers");
 const logRequestMethod = require("../middleware/logRequestMethod");
-const requireAPIKey = require("../middleware/requireAPIKey");
 
 const teachersRouter = express.Router();
 
-teachersRouter.use(requireAPIKey);
-teachersRouter.use("/teachers/:id", logRequestMethod);
+teachersRouter.use("/:id", logRequestMethod);
 
 // get all teachers
-teachersRouter.get("/teachers", (req, res) => {
+teachersRouter.get("/", (req, res) => {
   const { from, to } = req.query;
   if (from && to) {
-    const teacherQuery = teachers.filter((t) => t.age >= from && t.age <= to);
+    const teacherQuery = TEACHERS.filter(
+      (teacher) => teacher.age >= from && teacher.age <= to
+    );
     return res.json({ data: teacherQuery });
   } else {
-    res.json({ data: teachers });
+    res.json({ data: TEACHERS });
   }
 });
 
 // get teacher by id
-teachersRouter.get("/teachers/:id", (req, res) => {
-  const teacherId = req.params.id;
-
-  const teacher = teachers.find((t) => t.id === teacherId);
+teachersRouter.get("/:id", (req, res) => {
+  const teacher = TEACHERS.find(
+    (teacher) => teacher.id === +req.params.id
+  );
 
   if (!teacher) {
     res.json({
@@ -35,36 +35,38 @@ teachersRouter.get("/teachers/:id", (req, res) => {
 });
 
 // create new teacher
-teachersRouter.post("/teachers", (req, res) => {
-  const newTeacher = req.body;
+teachersRouter.post("/", (req, res) => {
+  const newTeacher = {
+    id: TEACHERS.length + 1,
+    ...req.body,
+  };
 
-  teachers.push(newTeacher);
+  TEACHERS.push(newTeacher);
 
   return res.json({
     message: "Create new successfully",
+    data: newTeacher,
   });
 });
 
 //update teacher
-teachersRouter.put("/teachers/:id", (req, res) => {
-  const teacherId = req.params.id;
-  const newDataTeacher = req.body;
-
-  const teacherIndex = teachers.findIndex((t) => t.id === teacherId);
+teachersRouter.put("/:id", (req, res) => {
+  const teacherIndex = TEACHERS.findIndex(
+    (teacher) => teacher.id === +req.params.id
+  );
 
   if (teacherIndex === -1) {
     return res.json({
       message: "Resource is not existence",
-      data: null,
     });
   }
 
   const updatedTeacher = {
-    ...teachers[teacherIndex],
-    ...newDataTeacher,
+    ...TEACHERS[teacherIndex],
+    ...req.body,
   };
 
-  teachers[teacherIndex] = updatedTeacher;
+  TEACHERS[teacherIndex] = updatedTeacher;
 
   return res.json({
     message: "Update successfully",
@@ -73,21 +75,22 @@ teachersRouter.put("/teachers/:id", (req, res) => {
 });
 
 // delete teacher
-teachersRouter.delete("/teachers/:id", (req, res) => {
-  const teacherId = req.params.id;
-  const teacherIndex = teachers.findIndex((t) => t.id === teacherId);
+teachersRouter.delete("/:id", (req, res) => {
+  const teacherIndex = TEACHERS.findIndex(
+    (teacher) => teacher.id === +req.params.id
+  );
 
-  if (teacherIndex === -1) {
+  if (teacherIndex === -1)
     return res.json({
       message: "Resource is not exist",
     });
-  }
 
-  teachers.splice(teacherIndex, 1);
+  TEACHERS.splice(teacherIndex, 1);
 
-  return res.json({
+  res.json({
     message: "Delete successfully",
   });
 });
 
-module.exports = { teachersRouter };
+
+module.exports = teachersRouter 

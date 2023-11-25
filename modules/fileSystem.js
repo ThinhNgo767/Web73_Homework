@@ -21,5 +21,11 @@ const readFile = (name) => {
     });
   };
 
+  const appendFile = (name,data)=>{
+    fs.appendFile(name, data, err => {
+      if (err) throw err;
+    });
+  }
 
-module.exports = { createFile ,readFile};
+
+module.exports = { createFile ,readFile,appendFile};
