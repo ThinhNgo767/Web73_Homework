@@ -6,6 +6,8 @@ const {
   authorizationAdmin,
 } = require("../middleware/accessControl.js");
 
+const authenticate = require("../modules/authenticateLogin.js");
+
 const usersRouter = express.Router();
 
 // get all
@@ -51,27 +53,19 @@ usersRouter.post("/", authenRegister, (req, res) => {
 });
 
 // login
-usersRouter.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  const user = USERS.find((user) => user.username === username);
+usersRouter.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
 
-  if (!user) {
-    res.json({ message: "Account not found" });
-  } else if (user.password !== password) {
-    return res.json({ message: "Wrong password" });
-  } else {
-    const response = {
-      username: user.username,
-      gender: user.gender,
-      age: user.age,
-      id: user.id,
-    };
+    const result = await authenticate(username, password);
 
     res.json({
       message: "Login successfully",
-      data: user.isAdmin
-        ? { ...response, accessToken: "YOU_IS_ADMIN" }
-        : response,
+      data: result,
+    });
+  } catch (err) {
+    res.status(400).json({
+      message: err.message,
     });
   }
 });

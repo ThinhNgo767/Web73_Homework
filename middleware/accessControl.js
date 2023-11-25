@@ -11,11 +11,6 @@ const authenRegister = (req, res, next) => {
   }
 };
 
-// const authenLogin = (req, res,next) => {
-  
-   
-// };
-
 const authorizationAdmin = (req,res,next)=>{
   const token = req.headers["x-access-token"]
 
