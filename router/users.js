@@ -2,17 +2,15 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 
 const USERS = require("../mock/users.js");
-const {
-  authenRegister,
-  authorizationAdmin,
-} = require("../middleware/accessControl.js");
+const checkUserRole = require("../middleware/checkUserRole.js")
 
-const authenticateLogin = require("../utils/authenticateLogin.js");
 
 const usersRouter = express.Router();
 
+usersRouter.use(checkUserRole("Admin"))
+
 // get all
-usersRouter.get("/", authorizationAdmin, (req, res) => {
+usersRouter.get("/", (req, res) => {
   const { from, to, gender } = req.query;
   if (from && to) {
     const usersFromTo = USERS.filter(
@@ -28,7 +26,7 @@ usersRouter.get("/", authorizationAdmin, (req, res) => {
 });
 
 // get with id
-usersRouter.get("/:id", authorizationAdmin, (req, res) => {
+usersRouter.get("/:id", (req, res) => {
   const user = USERS.find((user) => user.id === +req.params.id);
 
   if (!user) {
@@ -40,7 +38,7 @@ usersRouter.get("/:id", authorizationAdmin, (req, res) => {
 });
 
 // create new
-usersRouter.post("/", authenRegister, (req, res) => {
+usersRouter.post("/", (req, res) => {
   const newUser = {
     ...req.body,
     id: USERS.length + 1,
@@ -53,43 +51,6 @@ usersRouter.post("/", authenRegister, (req, res) => {
   });
 });
 
-// login
-// usersRouter.post("/login", async (req, res) => {
-//   const { username, password } = req.body;
-
-//   if (!username || !password) {
-//     return res.json({
-//       message: "Missing input data!",
-//     });
-//   }
-//   try {
-//     const existingUser = await authenticateLogin(USERS, req.body);
-
-//     const { id, username, isAdmin, gender, age } = existingUser;
-
-//     const payload = {
-//       id: id,
-//       username: username,
-//       isAdmin: isAdmin,
-//       gender: gender,
-//       age: age,
-//     };
-//     const SECRET_KEY = process.env.SECRET_KEY;
-//     const token = jwt.sign(payload, SECRET_KEY, {
-//       expiresIn: "60s",
-//     });
-//     res.json({
-//       message: "Login successfully",
-//       accessToken: token,
-//     });
-
-//     res.json(existingUser);
-//   } catch (err) {
-//     res.status(400).json({
-//       message: err.message,
-//     });
-//   }
-// });
 
 //update
 usersRouter.put("/:id", (req, res) => {
@@ -115,7 +76,7 @@ usersRouter.put("/:id", (req, res) => {
 });
 
 // delete
-usersRouter.delete("/:id", authorizationAdmin, (req, res) => {
+usersRouter.delete("/:id", (req, res) => {
   const userIndex = USERS.findIndex((teacher) => teacher.id === +req.params.id);
 
   if (userIndex === -1)

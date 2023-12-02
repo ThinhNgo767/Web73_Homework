@@ -6,7 +6,6 @@ const checkUserRole = (requiredRole) => {
   return (req, res, next) => {
     const token = req.headers["x-access-token"];
 
-    console.log(token)
     if (!token) {
       return res.status(401).json({ error: "Unauthorized" });
     }

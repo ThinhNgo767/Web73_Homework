@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 
 const authenticateLogin = require("../utils/authenticateLogin");
 const TEACHERS = require("../mock/teachers");
+const STUDENTS = require("../mock/students")
 const USERS = require("../mock/users");
 
 const authRouter = express.Router();
@@ -17,7 +18,7 @@ authRouter.post("/", async (req, res) => {
   }
 
   try {
-    const existingUser = await authenticateLogin(req.body, ...TEACHERS, ...USERS);
+    const existingUser = await authenticateLogin(req.body, ...TEACHERS,...STUDENTS, ...USERS);
 
     const { id, fullname, username, role, gender, age } = existingUser;
     

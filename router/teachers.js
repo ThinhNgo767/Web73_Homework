@@ -10,9 +10,8 @@ const teachersRouter = express.Router();
 
 teachersRouter.use("/:id", logRequestMethod);
 
+teachersRouter.use(checkUserRole("teacher"))
 // get all teachers
-// teachersRouter.use(checkUserRole("teacher"))
-
 teachersRouter.get("/", (req, res) => {
   const { from, to } = req.query;
   if (from && to) {
