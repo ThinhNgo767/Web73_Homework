@@ -2,12 +2,12 @@ const USERS = require("../mock/users");
 
 const authenRegister = (req, res, next) => {
   const user = USERS.find((user) => user.username === req.body.username);
-  if (!user) {
-    next();
-  } else {
+  if (user) {
     return res.json({
-      message: "username already exists",
-    });
+        message: "username already exists",
+      });
+  } else {
+    next()
   }
 };
 
@@ -16,7 +16,7 @@ const authorizationAdmin = (req,res,next)=>{
 
   if(!token || token !== "YOU_IS_ADMIN"){
    return res.json({
-        message : "Missing access token"
+        message : "You not administrator"
     })
   }else{
     next()

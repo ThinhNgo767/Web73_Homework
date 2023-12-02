@@ -1,13 +1,18 @@
 const express = require("express");
+const { ObjectId } = require("mongodb");
 
 const TEACHERS = require("../mock/teachers");
 const logRequestMethod = require("../middleware/logRequestMethod");
+const checkUserRole = require("../middleware/checkUserRole");
+const { db } = require("../utils/connectToDB");
 
 const teachersRouter = express.Router();
 
 teachersRouter.use("/:id", logRequestMethod);
 
 // get all teachers
+// teachersRouter.use(checkUserRole("teacher"))
+
 teachersRouter.get("/", (req, res) => {
   const { from, to } = req.query;
   if (from && to) {
@@ -22,9 +27,7 @@ teachersRouter.get("/", (req, res) => {
 
 // get teacher by id
 teachersRouter.get("/:id", (req, res) => {
-  const teacher = TEACHERS.find(
-    (teacher) => teacher.id === +req.params.id
-  );
+  const teacher = TEACHERS.find((teacher) => teacher.id === +req.params.id);
 
   if (!teacher) {
     res.json({
@@ -35,15 +38,14 @@ teachersRouter.get("/:id", (req, res) => {
 });
 
 // create new teacher
-teachersRouter.post("/", (req, res) => {
+teachersRouter.post("/", async (req, res) => {
   const newTeacher = {
-    id: TEACHERS.length + 1,
-    ...req.body,
+    ...req.body
   };
 
-  TEACHERS.push(newTeacher);
+  await db.teachers.insertOne(newTeacher);
 
-  return res.json({
+  res.json({
     message: "Create new successfully",
     data: newTeacher,
   });
@@ -92,5 +94,4 @@ teachersRouter.delete("/:id", (req, res) => {
   });
 });
 
-
-module.exports = teachersRouter 
+module.exports = teachersRouter;

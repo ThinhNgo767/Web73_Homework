@@ -1,4 +1,5 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 
 const USERS = require("../mock/users.js");
 const {
@@ -6,7 +7,7 @@ const {
   authorizationAdmin,
 } = require("../middleware/accessControl.js");
 
-const authenticate = require("../modules/authenticateLogin.js");
+const authenticateLogin = require("../utils/authenticateLogin.js");
 
 const usersRouter = express.Router();
 
@@ -53,22 +54,42 @@ usersRouter.post("/", authenRegister, (req, res) => {
 });
 
 // login
-usersRouter.post("/login", async (req, res) => {
-  try {
-    const { username, password } = req.body;
+// usersRouter.post("/login", async (req, res) => {
+//   const { username, password } = req.body;
 
-    const result = await authenticate(username, password);
+//   if (!username || !password) {
+//     return res.json({
+//       message: "Missing input data!",
+//     });
+//   }
+//   try {
+//     const existingUser = await authenticateLogin(USERS, req.body);
 
-    res.json({
-      message: "Login successfully",
-      data: result,
-    });
-  } catch (err) {
-    res.status(400).json({
-      message: err.message,
-    });
-  }
-});
+//     const { id, username, isAdmin, gender, age } = existingUser;
+
+//     const payload = {
+//       id: id,
+//       username: username,
+//       isAdmin: isAdmin,
+//       gender: gender,
+//       age: age,
+//     };
+//     const SECRET_KEY = process.env.SECRET_KEY;
+//     const token = jwt.sign(payload, SECRET_KEY, {
+//       expiresIn: "60s",
+//     });
+//     res.json({
+//       message: "Login successfully",
+//       accessToken: token,
+//     });
+
+//     res.json(existingUser);
+//   } catch (err) {
+//     res.status(400).json({
+//       message: err.message,
+//     });
+//   }
+// });
 
 //update
 usersRouter.put("/:id", (req, res) => {

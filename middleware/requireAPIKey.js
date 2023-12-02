@@ -1,8 +1,8 @@
 const requireAPIKey = (req, res, next) => {
-    const apiKey = "MindX-Teachers"
+    const API_KEY = process.env.API_KEY
     const { key } = req.query;
   
-    if (key === apiKey && key) {
+    if (key === API_KEY && key) {
       next();
     } else {
       res.json({
