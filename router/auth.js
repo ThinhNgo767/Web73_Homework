@@ -2,9 +2,8 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 
 const authenticateLogin = require("../utils/authenticateLogin");
-const TEACHERS = require("../mock/teachers");
-const STUDENTS = require("../mock/students")
-const USERS = require("../mock/users");
+const getDataFromMongoDB = require("../utils/getDataFromMongoDB")
+const {db} = require("../utils/connectToDB")
 
 const authRouter = express.Router();
 
@@ -16,9 +15,12 @@ authRouter.post("/", async (req, res) => {
       message: "Missing input data!",
     });
   }
+const teachers = await getDataFromMongoDB(db.teachers)
+const students = await getDataFromMongoDB(db.students)
+const users = await getDataFromMongoDB(db.users)
 
   try {
-    const existingUser = await authenticateLogin(req.body, ...TEACHERS,...STUDENTS, ...USERS);
+    const existingUser = await authenticateLogin(req.body, ...teachers,...students, ...users);
 
     const { id, fullname, username, role, gender, age } = existingUser;
     
@@ -34,7 +36,7 @@ authRouter.post("/", async (req, res) => {
     };
 
     const token = jwt.sign(payload,SECRET_KEY,{
-      expiresIn : "300s"
+      expiresIn : "3000s"
     })
 
     res.json({

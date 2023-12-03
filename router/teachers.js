@@ -1,96 +1,168 @@
 const express = require("express");
 const { ObjectId } = require("mongodb");
 
-const TEACHERS = require("../mock/teachers");
-const logRequestMethod = require("../middleware/logRequestMethod");
 const checkUserRole = require("../middleware/checkUserRole");
 const { db } = require("../utils/connectToDB");
 
 const teachersRouter = express.Router();
 
-teachersRouter.use("/:id", logRequestMethod);
+teachersRouter.use(checkUserRole("teacher"));
 
-teachersRouter.use(checkUserRole("teacher"))
 // get all teachers
-teachersRouter.get("/", (req, res) => {
-  const { from, to } = req.query;
-  if (from && to) {
-    const teacherQuery = TEACHERS.filter(
-      (teacher) => teacher.age >= from && teacher.age <= to
-    );
-    return res.json({ data: teacherQuery });
-  } else {
-    res.json({ data: TEACHERS });
+teachersRouter.get("/", async (req, res) => {
+  try {
+    let query = {};
+    const { from, to } = req.query;
+    if (from && to) {
+      query.age = { $gte: from, $lte: to };
+    }
+
+    const teachers = await db.teachers.find(query).toArray();
+
+    if (teachers.length === 0) {
+      return res.status(404).json({
+        message: "Resource not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Get successfully",
+      data: teachers,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
   }
 });
 
 // get teacher by id
-teachersRouter.get("/:id", (req, res) => {
-  const teacher = TEACHERS.find((teacher) => teacher.id === +req.params.id);
-
-  if (!teacher) {
-    res.json({
+teachersRouter.get("/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const teacher = await db.teachers.findOne({
+      _id: new ObjectId(id),
+    });
+    if (!teacher) {
+      return res.status(404).json({
+        message: "Resource not found",
+      });
+    }
+    res.status(200).json({
+      message: "Get successfully",
+      data: teacher,
+    });
+  } catch (err) {
+    res.status(500).json({
       message: "Resource is not existence!",
+      error: err.message,
     });
   }
-  return res.json({ data: teacher });
 });
 
 // create new teacher
 teachersRouter.post("/", async (req, res) => {
-  const newTeacher = {
-    ...req.body
-  };
-
-  await db.teachers.insertOne(newTeacher);
-
-  res.json({
-    message: "Create new successfully",
-    data: newTeacher,
-  });
-});
-
-//update teacher
-teachersRouter.put("/:id", (req, res) => {
-  const teacherIndex = TEACHERS.findIndex(
-    (teacher) => teacher.id === +req.params.id
-  );
-
-  if (teacherIndex === -1) {
-    return res.json({
-      message: "Resource is not existence",
+  if (Object.keys(req.body).length === 0) {
+    return res.status(400).json({
+      message: "No data provided!",
     });
   }
 
-  const updatedTeacher = {
-    ...TEACHERS[teacherIndex],
+  const newTeacher = {
     ...req.body,
   };
 
-  TEACHERS[teacherIndex] = updatedTeacher;
+  try {
+    const teacher = await db.teachers.insertOne(newTeacher);
 
-  return res.json({
-    message: "Update successfully",
-    data: updatedTeacher,
-  });
+    if (!teacher) {
+      return res.status(404).json({
+        message: "Insert failed!",
+      });
+    }
+    const insertTeacher = { _id: teacher.insertedId, ...req.body };
+
+    res.status(200).json({
+      message: "Create new successfully",
+      data: insertTeacher,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Create failure!",
+      error: err.message,
+    });
+  }
+});
+
+//update teacher
+teachersRouter.put("/:id", async (req, res) => {
+  const id = req.params.id;
+  const { fullname, role, gender, age } = req.body;
+  if (!id) {
+    return res.status(400).json({
+      message: "Missing ID",
+    });
+  }
+  if (Object.keys(req.body).length === 0) {
+    return res.status(400).json({
+      message: "No data provided!",
+    });
+  }
+  try {
+    const teacher = await db.teachers.updateOne(
+      {
+        _id: new ObjectId(id),
+      },
+      {
+        $set: {
+          fullname: fullname,
+          role: role,
+          gender: gender,
+          age: age,
+        },
+      }
+    );
+    if (teacher.modifiedCount === 0) {
+      return res.status(404).json({
+        message: "Data does not change",
+      });
+    }
+    res.status(200).json({
+      message: "Update successfully",
+      data: req.body,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Update failure!",
+      error: err.message,
+    });
+  }
 });
 
 // delete teacher
-teachersRouter.delete("/:id", (req, res) => {
-  const teacherIndex = TEACHERS.findIndex(
-    (teacher) => teacher.id === +req.params.id
-  );
-
-  if (teacherIndex === -1)
-    return res.json({
-      message: "Resource is not exist",
+teachersRouter.delete("/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const teacher = await db.teachers.deleteOne({
+      _id: new ObjectId(id),
     });
 
-  TEACHERS.splice(teacherIndex, 1);
+    if (teacher.deletedCount === 0) {
+      return res.status(404).json({
+        message: "Resource not found",
+      });
+    }
 
-  res.json({
-    message: "Delete successfully",
-  });
+    res.status(200).json({
+      message: "Delete successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Delete failure!",
+      error: err.message,
+    });
+  }
 });
 
 module.exports = teachersRouter;
