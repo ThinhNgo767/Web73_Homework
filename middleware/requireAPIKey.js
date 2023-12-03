@@ -5,7 +5,7 @@ const requireAPIKey = (req, res, next) => {
     if (key === API_KEY && key) {
       next();
     } else {
-      res.json({
+      res.status(404).json({
         message: "API key is not existence!",
       });
     }

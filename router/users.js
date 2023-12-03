@@ -1,94 +1,167 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
+const { ObjectId } = require("mongodb");
 
-const USERS = require("../mock/users.js");
-const checkUserRole = require("../middleware/checkUserRole.js")
-
+const checkUserRole = require("../middleware/checkUserRole.js");
+const { db } = require("../utils/connectToDB");
 
 const usersRouter = express.Router();
 
-usersRouter.use(checkUserRole("Admin"))
-
+usersRouter.use(checkUserRole("admin"))
 // get all
-usersRouter.get("/", (req, res) => {
-  const { from, to, gender } = req.query;
-  if (from && to) {
-    const usersFromTo = USERS.filter(
-      (user) => user.age >= from && user.age <= to
-    );
-    return res.json({ data: usersFromTo });
-  } else if (gender) {
-    const usersGender = USERS.filter((user) => user.gender === gender);
-    return res.json({ data: usersGender });
-  } else {
-    res.json({ data: USERS });
+usersRouter.get("/", async (req, res) => {
+  try {
+    let query = {};
+    const { from, to } = req.query;
+    if (from && to) {
+      query.age = { $gte: from, $lte: to };
+    }
+
+    const users = await db.users.find(query).toArray();
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        message: "Resource not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Get successfully",
+      data: users,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
   }
 });
 
 // get with id
-usersRouter.get("/:id", (req, res) => {
-  const user = USERS.find((user) => user.id === +req.params.id);
-
-  if (!user) {
-    res.json({
+usersRouter.get("/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const user = await db.users.findOne({
+      _id: new ObjectId(id),
+    });
+    if (!user) {
+      return res.status(404).json({
+        message: "Resource not found",
+      });
+    }
+    res.status(200).json({
+      message: "Get successfully",
+      data: user,
+    });
+  } catch (err) {
+    res.status(500).json({
       message: "Resource is not existence!",
+      error: err.message,
     });
   }
-  return res.json({ data: user });
 });
 
 // create new
-usersRouter.post("/", (req, res) => {
-  const newUser = {
-    ...req.body,
-    id: USERS.length + 1,
-  };
-
-  USERS.push(newUser);
-  res.json({
-    message: "Create new successfully",
-    data: newUser,
-  });
-});
-
-
-//update
-usersRouter.put("/:id", (req, res) => {
-  const userIndex = USERS.findIndex((teacher) => teacher.id === +req.params.id);
-
-  if (userIndex === -1) {
-    return res.json({
-      message: "Resource is not existence",
+usersRouter.post("/", async (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+    return res.status(400).json({
+      message: "No data provided!",
     });
   }
 
-  const updatedUser = {
-    ...USERS[userIndex],
+  const newUser = {
     ...req.body,
   };
 
-  USERS[userIndex] = updatedUser;
+  try {
+    const user = await db.users.insertOne(newUser);
 
-  return res.json({
-    message: "Update successfully",
-    data: updatedUser,
-  });
+    if (!user) {
+      return res.status(404).json({
+        message: "Insert failed!",
+      });
+    }
+    const insertUser = { _id: user.insertedId, ...req.body };
+
+    res.status(200).json({
+      message: "Create new successfully",
+      data: insertUser,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Create failure!",
+      error: err.message,
+    });
+  }
+});
+
+//update
+usersRouter.put("/:id", async (req, res) => {
+  const id = req.params.id;
+  const { fullname, role, gender, age } = req.body;
+  if (!id) {
+    return res.status(400).json({
+      message: "Missing ID",
+    });
+  }
+  if (Object.keys(req.body).length === 0) {
+    return res.status(400).json({
+      message: "No data provided!",
+    });
+  }
+  try {
+    const user = await db.users.updateOne(
+      {
+        _id: new ObjectId(id),
+      },
+      {
+        $set: {
+          fullname: fullname,
+          role: role,
+          gender: gender,
+          age: age,
+        },
+      }
+    );
+    if (user.modifiedCount === 0) {
+      return res.status(404).json({
+        message: "Data does not change",
+      });
+    }
+    res.status(200).json({
+      message: "Update successfully",
+      data: req.body,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Update failure!",
+      error: err.message,
+    });
+  }
 });
 
 // delete
-usersRouter.delete("/:id", (req, res) => {
-  const userIndex = USERS.findIndex((teacher) => teacher.id === +req.params.id);
-
-  if (userIndex === -1)
-    return res.json({
-      message: "Resource is not exist",
+usersRouter.delete("/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const user = await db.user.deleteOne({
+      _id: new ObjectId(id),
     });
 
-  USERS.splice(userIndex, 1);
+    if (user.deletedCount === 0) {
+      return res.status(404).json({
+        message: "Resource not found",
+      });
+    }
 
-  res.json({
-    message: "Delete successfully",
-  });
+    res.status(200).json({
+      message: "Delete successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Delete failure!",
+      error: err.message,
+    });
+  }
 });
 
 module.exports = usersRouter;

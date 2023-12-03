@@ -7,12 +7,12 @@ const checkUserRole = (requiredRole) => {
     const token = req.headers["x-access-token"];
 
     if (!token) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
       if (err) {
-        return res.status(403).json({ error: "Invalid token" });
+        return res.status(403).json({ message: "Invalid token" });
       }
 
       const userRole = decoded.role;
@@ -20,7 +20,7 @@ const checkUserRole = (requiredRole) => {
       if (userRole === requiredRole) {
         next();
       } else {
-        res.status(403).json({ error: "Permission denied" });
+        res.status(403).json({ message: "Permission denied" });
       }
     });
   };
